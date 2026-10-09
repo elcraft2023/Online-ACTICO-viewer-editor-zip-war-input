@@ -196,7 +196,7 @@ export class App {
     }
     this.cdRef.detectChanges();
     if (this.showVisual) {
-      setTimeout(() => this.renderTree(), 50);
+      setTimeout(() => this.renderTree(), 100);
     }
   }
 
@@ -210,6 +210,7 @@ export class App {
   }
 
   onXmlEdited() {
+    this.persistCurrentRule();
     if (this.showVisual) {
       setTimeout(() => this.renderTree(), 120);
     }
@@ -498,6 +499,10 @@ export class App {
 
   async selectRule(filePath: string) {
     if (!this.loadedZip) return;
+    // vorherige Regel automatisch ins Archiv schreiben
+    if (this.activeFilePath && this.activeFilePath !== filePath) {
+      this.persistCurrentRule();
+    }
     this.activeFilePath = filePath;
     // immer wie neu geöffnet
     this.undoStack = [];
@@ -517,7 +522,7 @@ export class App {
       setTimeout(() => {
         this.renderTree();
         this.scrollSidebarToActive(filePath);
-      }, 50);
+      }, 100);
     } else {
       this.cdRef.detectChanges();
     }
@@ -544,6 +549,7 @@ export class App {
     return (
       el.getAttribute('xsi:type') ||
       el.getAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'type') ||
+      el.getAttribute('type') ||
       ''
     );
   }
@@ -563,8 +569,8 @@ export class App {
 
   private infoText(el: Element): string {
     for (const c of Array.from(el.children)) {
-      const tag = c.nodeName.toLowerCase();
-      if (tag.includes('information') || tag.endsWith('informations')) {
+      const local = ((c as any).localName || c.nodeName.split(':').pop() || c.nodeName).toLowerCase();
+      if (local.includes('information')) {
         const tx = c.getAttribute('text');
         if (tx) return tx.trim();
       }
@@ -596,8 +602,8 @@ export class App {
 
   private successorChildren(el: Element): Element[] {
     return Array.from(el.children).filter(c => {
-      const tag = c.nodeName.toLowerCase();
-      return tag === 'successors' || tag.endsWith(':successors') || tag.includes('successor');
+      const local = ((c as any).localName || c.nodeName.split(':').pop() || c.nodeName).toLowerCase();
+      return local === 'successors';
     });
   }
 
@@ -616,7 +622,17 @@ export class App {
   }
 
   renderTree() {
-    if (!this.visualContainer) return;
+    // Clean leftover pan state from previous canvas
+    this.isPanning = false;
+    try { document.body.classList.remove('actico-panning-active'); } catch { /* */ }
+
+    if (!this.visualContainer?.nativeElement) {
+      // ViewChild may lag after *ngIf — retry once
+      setTimeout(() => {
+        if (this.visualContainer?.nativeElement) this.renderTree();
+      }, 80);
+      return;
+    }
     const container = this.visualContainer.nativeElement;
     container.innerHTML = '';
 
@@ -1230,6 +1246,7 @@ export class App {
     caseEl.appendChild(info);
     live.appendChild(caseEl);
     this.currentXmlText = new XMLSerializer().serializeToString(doc);
+    this.persistCurrentRule();
     this.renderTree();
     this.cdRef.detectChanges();
   }
@@ -1257,6 +1274,7 @@ export class App {
     this.currentXmlText = this.undoStack.pop()!;
     this.selectedXmlElement = null;
     this.isModalOpen = false;
+    this.persistCurrentRule();
     this.renderTree();
     this.cdRef.detectChanges();
   }
@@ -1271,6 +1289,7 @@ export class App {
     this.currentXmlText = this.redoStack.pop()!;
     this.selectedXmlElement = null;
     this.isModalOpen = false;
+    this.persistCurrentRule();
     this.renderTree();
     this.cdRef.detectChanges();
   }
@@ -1343,6 +1362,7 @@ export class App {
     }
 
     this.currentXmlText = new XMLSerializer().serializeToString(doc);
+    this.persistCurrentRule();
     this.renderTree();
   }
 
@@ -1363,21 +1383,50 @@ export class App {
     if (!this.selectedXmlElement) return;
     const serializer = new XMLSerializer();
     this.currentXmlText = serializer.serializeToString(this.selectedXmlElement.ownerDocument);
+    this.persistCurrentRule();
     this.renderTree();
   }
 
-  saveCurrentRuleToZip() {
+  /** Schreibt die aktuelle Regel ins ZIP im Speicher (sofort). */
+  private persistCurrentRule() {
     if (!this.loadedZip || !this.activeFilePath) return;
+    // auch leerer String ist gültig
+    if (this.currentXmlText === null || this.currentXmlText === undefined) return;
     this.loadedZip.file(this.activeFilePath, this.currentXmlText);
-    alert(`Änderungen für ${this.activeFilePath} gespeichert!`);
+  }
+
+  /** Manuell (optional) – speichert wie Auto-Save, mit kurzem Feedback */
+  saveCurrentRuleToZip() {
+    if (!this.loadedZip || !this.activeFilePath) {
+      alert('Keine Regel geöffnet.');
+      return;
+    }
+    this.persistCurrentRule();
+    // still feedback but soft
+    this.cdRef.detectChanges();
   }
 
   async downloadZip() {
-    if (!this.loadedZip) return;
-    const content = await this.loadedZip.generateAsync({ type: 'blob' });
+    if (!this.loadedZip) {
+      alert('Kein Archiv geladen.');
+      return;
+    }
+    // aktuelle Bearbeitung mitnehmen
+    this.persistCurrentRule();
+
+    // Volles Archiv: alle Originaldateien + geänderte Regeln
+    // (JSZip behält beim loadAsync alle Einträge; wir überschreiben nur bearbeitete)
+    const content = await this.loadedZip.generateAsync({
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 },
+    });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(content);
-    link.download = `updated_${this.originalFileName}`;
+    const base = this.originalFileName || 'archive.zip';
+    link.download = base.toLowerCase().endsWith('.zip') || base.toLowerCase().endsWith('.war')
+      ? `updated_${base}`
+      : `updated_${base}.zip`;
     link.click();
     URL.revokeObjectURL(link.href);
   }

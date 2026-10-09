@@ -509,7 +509,7 @@ html, body {
 
 /* Pan & selection */
 .actico-canvas {
-  cursor: grab;
+  cursor: default;
 }
 .actico-canvas.panning {
   cursor: grabbing !important;
