@@ -1,1 +1,851 @@
-/* You can add global styles to this file, and also import other style files */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: #0f172a;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+/* ACTICO flow nodes (global – dynamic DOM) */
+/* ═══════════════════════════════════════════
+   ACTICO FLOW – Layout wie ACTICO Modeler
+   ═══════════════════════════════════════════ */
+
+#visual-container {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  background: #c8ccd0;
+  min-height: 0;
+  flex: 1;
+}
+
+.actico-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 280px;
+  width: 100%;
+  color: #666;
+  text-align: center;
+  gap: 12px;
+  background: #d8dce0;
+  padding: 40px;
+}
+.actico-empty-icon { font-size: 2.5rem; opacity: 0.35; }
+.actico-error {
+  color: #c62828;
+  font-weight: bold;
+  padding: 30px;
+}
+
+.actico-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  padding: 6px 14px;
+  flex-shrink: 0;
+}
+.actico-toolbar-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #38bdf8;
+}
+.actico-toolbar-actions { display: flex; gap: 4px; }
+.actico-tb-btn {
+  min-width: 32px;
+  height: 28px;
+  padding: 0 8px;
+  background: #334155;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+.actico-tb-btn:hover { background: #475569; color: #fff; }
+
+.actico-canvas {
+  flex: 1 1 auto;
+  overflow: auto;
+  min-height: 200px;
+  padding: 28px 36px 100px 36px;
+  background-color: #d8dce0;
+  background-image:
+    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.actico-flow {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: transform 0.15s ease;
+}
+
+/* Vertical connector under start / between sequential top-level steps */
+.v-line {
+  width: 2px;
+  height: 16px;
+  background: #5a5a5a;
+  margin-left: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Start (green chevron) ── */
+.node-start {
+  width: 0;
+  height: 0;
+  border-top: 11px solid transparent;
+  border-bottom: 11px solid transparent;
+  border-left: 20px solid #43a047;
+  position: relative;
+  margin-left: 2px;
+}
+.node-start::after {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: -7px;
+  width: 9px;
+  height: 14px;
+  background: #43a047;
+}
+
+/* ── Assign – solid blue bar (ACTICO) ── */
+.node-assign {
+  display: inline-flex;
+  align-items: stretch;
+  cursor: pointer;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.22);
+  border-radius: 2px;
+  overflow: hidden;
+  max-width: 340px;
+}
+.node-assign .icon-block {
+  background: #0d47a1;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.node-assign .body {
+  background: #1565c0;
+  color: #fff;
+  padding: 5px 12px;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.node-assign .body .title { font-weight: 600; }
+.node-assign .body .expr {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 10px;
+  opacity: 0.92;
+  margin-top: 2px;
+}
+.node-assign:hover { filter: brightness(1.08); }
+
+/* ── Decide ── */
+.node-decide-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.decide-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.diamond {
+  width: 22px;
+  height: 22px;
+  background: #ffeb3b;
+  border: 1.5px solid #b89b00;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  cursor: pointer;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.18);
+  z-index: 2;
+}
+.diamond:hover { filter: brightness(1.1); }
+.diamond-inner {
+  transform: rotate(-45deg);
+  width: 22px;
+  height: 22px;
+}
+
+/* Yellow decision title box (like ACTICO) */
+.decide-label {
+  background: #fffde7;
+  border: 1px solid #c9a800;
+  border-radius: 2px;
+  padding: 4px 10px;
+  margin-left: 12px;
+  font-size: 11px;
+  max-width: 300px;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.12);
+  cursor: pointer;
+  line-height: 1.3;
+  color: #222;
+}
+.decide-label .d-title { font-weight: 600; color: #333; }
+.decide-label .d-expr {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 10px;
+  color: #555;
+  margin-top: 2px;
+}
+.decide-label:hover { background: #fff9c4; }
+
+/* Branch column – vertical spine under diamond */
+.branches {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-left: 10px;
+  padding-left: 0;
+}
+.branches::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: #5a5a5a;
+}
+
+/* One branch row: spine → badge → h-line → content (horizontal like ACTICO) */
+.branch {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 8px 0;
+  position: relative;
+  min-height: 36px;
+}
+
+/* Yellow condition box (rectangular, ACTICO style) */
+.branch-badge {
+  background: #fffde7;
+  border: 1px solid #c9a800;
+  border-radius: 2px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #5d4e00;
+  white-space: nowrap;
+  margin-left: -1px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  cursor: pointer;
+  z-index: 1;
+  position: relative;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.branch-badge:hover { background: #fff9c4; }
+
+.branch-h {
+  width: 20px;
+  height: 2px;
+  background: #5a5a5a;
+  flex-shrink: 0;
+}
+
+/* Content after branch goes to the RIGHT (horizontal flow) */
+.branch-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+.branch-content .v-line {
+  width: 16px;
+  height: 2px;
+  margin-left: 0;
+  background: #5a5a5a;
+}
+.branch-content > * + * {
+  /* sequential nodes in a branch row with small h-gap */
+}
+
+/* horizontal connector between sequential nodes in a branch */
+.h-seq {
+  width: 16px;
+  height: 2px;
+  background: #5a5a5a;
+  flex-shrink: 0;
+}
+
+/* ── Action / Fire – green-bordered box like ACTICO call ── */
+.node-action {
+  display: inline-flex;
+  align-items: stretch;
+  cursor: pointer;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid #66bb6a;
+  max-width: 280px;
+}
+.action-circle {
+  width: 22px;
+  background: #2e7d32;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 10px;
+}
+.node-action .body {
+  background: #e8f5e9;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #1b5e20;
+  line-height: 1.35;
+}
+.node-action .body .title { font-weight: 600; }
+.node-action .body .expr {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 10px;
+  color: #388e3c;
+}
+
+/* ── Call Flow Rule / Decision Table – green box (ACTICO) ── */
+.node-call {
+  display: inline-flex;
+  align-items: stretch;
+  cursor: pointer;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid #66bb6a;
+  max-width: 300px;
+}
+.node-call .icon-block {
+  background: #2e7d32;
+  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.node-call .body {
+  background: #e8f5e9;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #1b5e20;
+  line-height: 1.35;
+}
+.node-call .body .title { font-weight: 600; }
+.node-call .body .expr {
+  font-size: 10px;
+  color: #388e3c;
+  margin-top: 1px;
+}
+.node-call:hover { filter: brightness(1.04); }
+
+/* Scorecard – keep green table style */
+.node-scorecard {
+  display: inline-flex;
+  align-items: stretch;
+  cursor: pointer;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  max-width: 300px;
+  border: 1px solid #66bb6a;
+}
+.node-scorecard .icon-block {
+  background: #2e7d32;
+  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+.node-scorecard .body {
+  background: #e8f5e9;
+  padding: 4px 10px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #1b5e20;
+}
+.node-scorecard .body .title { font-weight: 600; }
+.node-scorecard .body .expr {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 10px;
+  color: #388e3c;
+  margin-top: 1px;
+}
+
+/* Generic / End */
+.node-generic {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.generic-box {
+  background: #fafafa;
+  border: 1px solid #9e9e9e;
+  border-radius: 2px;
+  padding: 4px 10px;
+  font-size: 11px;
+  max-width: 260px;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  color: #222;
+}
+.generic-box .title { font-weight: 600; }
+.generic-box .expr {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 10px;
+  color: #555;
+}
+.node-end .end-flag {
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 16px solid #e53935;
+}
+
+
+/* ── MODALS ── */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.modal-box {
+  background: #1e293b;
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  padding: 20px;
+  width: 450px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+.modal-box label {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+.modal-box input,
+.modal-box select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #fff;
+  border-radius: 4px;
+}
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.danger-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.danger-btn:hover {
+  background: #dc2626;
+}
+.add-section {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px dashed #334155;
+}
+.readme-list {
+  line-height: 1.6;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+
+/* Pan & selection */
+.actico-canvas {
+  cursor: grab;
+}
+.actico-canvas.panning {
+  cursor: grabbing !important;
+  user-select: none;
+}
+.actico-canvas .actico-flow {
+  will-change: transform;
+}
+
+.node-selected {
+  outline: 2px solid #38bdf8 !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.35) !important;
+}
+
+/* Palette bar under toolbar */
+.actico-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+  flex-shrink: 0;
+}
+.actico-palette-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 4px;
+  color: #e2e8f0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.actico-palette-btn:hover {
+  background: #334155;
+  border-color: #38bdf8;
+  color: #fff;
+}
+.actico-palette-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pal-icon {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.pal-icon.diamond {
+  background: #ffeb3b;
+  border: 1px solid #c9a800;
+  transform: rotate(45deg);
+  width: 10px;
+  height: 10px;
+}
+.pal-icon.assign {
+  background: #1565c0;
+  border-radius: 1px;
+}
+.pal-icon.call {
+  background: #2e7d32;
+  border-radius: 1px;
+}
+.pal-icon.action {
+  background: #2e7d32;
+  border-radius: 50%;
+}
+
+/* Hint under palette */
+.actico-hint {
+  font-size: 10px;
+  color: #64748b;
+  padding: 2px 12px 4px;
+  background: #0f172a;
+  flex-shrink: 0;
+}
+
+/* Layout fixes for scroll + XML editor */
+html, body { height: 100%; margin: 0; overflow: hidden; }
+app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.sidebar {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+#file-list {
+  flex: 1 1 0 !important;
+  overflow-y: scroll !important;
+  min-height: 0 !important;
+  height: 100% !important;
+}
+#visual-container {
+  display: flex; /* NO !important – allows hiding for XML editor */
+}
+
+.toggle-btn.icon-btn { min-width: 36px; padding: 0 10px; justify-content: center; }
+.toggle-btn.icon-btn svg { display: block; }
+.toggle-btn.icon-btn:disabled { opacity: 0.35; }
+
+/* Drag over */
+.upload-area.drag-over {
+  background-color: #1e3a5f !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35);
+}
+
+/* Split view */
+.workspace.split-mode {
+  flex-direction: row !important;
+}
+.workspace.split-mode #visual-container,
+.workspace.split-mode #editor-container {
+  flex: 1 1 50% !important;
+  width: 50% !important;
+  min-width: 0;
+  display: flex !important;
+}
+.workspace.split-mode #visual-container {
+  border-right: none;
+}
+.split-divider {
+  width: 4px;
+  flex-shrink: 0;
+  background: #334155;
+  cursor: col-resize;
+  align-self: stretch;
+}
+.workspace.split-mode #editor-container {
+  border-left: 1px solid #334155;
+}
+
+/* Cleaner icon buttons */
+.toggle-btn.icon-btn {
+  min-width: 40px;
+  width: 40px;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.toggle-btn.icon-btn svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.toggle-btn.icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.toggle-btn.icon-btn:not(:disabled):hover {
+  background: #475569;
+  color: #fff;
+}
+
+/* ACTICO-style left palette + context (video features) */
+.modeler-palette {
+  width: 148px;
+  flex-shrink: 0;
+  background: #f0f0f0;
+  border-right: 1px solid #a0a0a0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  font-size: 11px;
+  color: #222;
+}
+.modeler-palette-header {
+  background: linear-gradient(to bottom, #e8e8e8, #d0d0d0);
+  border-bottom: 1px solid #a0a0a0;
+  padding: 6px 8px;
+  font-weight: 700;
+  font-size: 11px;
+  color: #333;
+}
+.modeler-pal-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 11px;
+  color: #222;
+  width: 100%;
+}
+.modeler-pal-item:hover:not(:disabled) {
+  background: #dce8f8;
+}
+.modeler-pal-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.context-palette {
+  width: 160px;
+  flex-shrink: 0;
+  background: #f5f5f5;
+  border-left: 1px solid #a0a0a0;
+  overflow-y: auto;
+  font-size: 11px;
+  color: #222;
+}
+.context-section { padding: 6px 0; }
+.context-label {
+  padding: 4px 8px;
+  font-weight: 700;
+  color: #555;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.context-item {
+  padding: 3px 10px;
+  border-bottom: 1px solid #ececec;
+  word-break: break-all;
+  font-family: Consolas, monospace;
+  font-size: 10px;
+}
+.context-empty {
+  padding: 12px 8px;
+  color: #888;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.canvas-and-context {
+  background: #d8dce0;
+}
+/* workspace with palette: row layout for visual part */
+.workspace {
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+.workspace.split-mode {
+  flex-direction: row;
+}
+
+/* Floating context – always on top */
+.context-overlay {
+  position: absolute;
+  top: 56px;
+  right: 12px;
+  width: 200px;
+  max-height: calc(100% - 68px);
+  overflow-y: auto;
+  z-index: 40;
+  background: #1e293b;
+  border: 1px solid #38bdf8;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  color: #e2e8f0;
+  font-size: 11px;
+  pointer-events: auto;
+}
+.context-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+  font-weight: 700;
+  color: #38bdf8;
+  position: sticky;
+  top: 0;
+}
+.context-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.context-close:hover { color: #fff; }
+.context-overlay .context-label {
+  color: #94a3b8;
+  padding: 6px 10px 2px;
+}
+.context-overlay .context-item {
+  padding: 3px 10px;
+  border-bottom: 1px solid #334155;
+  font-family: Consolas, monospace;
+  word-break: break-all;
+  color: #e2e8f0;
+}
+.context-overlay .context-empty {
+  padding: 12px;
+  color: #64748b;
+}
+
+.actico-canvas.content-off .d-expr,
+.actico-canvas.content-off .expr { display: none !important; }
+
+.node-call-linked {
+  cursor: pointer;
+  box-shadow: 0 0 0 1px #43a047;
+}
+.node-call-linked:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 0 0 2px #66bb6a;
+}
+.node-call .link-arrow {
+  color: #2e7d32;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.actico-tb-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.node-assign, .node-action, .node-call, .node-scorecard, .decide-label, .branch-badge, .generic-box {
+  max-width: none !important;
+  overflow: visible !important;
+}
+.node-assign .body, .node-action .body, .node-call .body, .node-scorecard .body,
+.decide-label, .branch-badge, .generic-box {
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.actico-canvas { cursor: default !important; user-select: none !important; }
+.actico-canvas.panning { cursor: grabbing !important; }
+body.actico-panning-active, body.actico-panning-active * {
+  cursor: grabbing !important; user-select: none !important;
+}

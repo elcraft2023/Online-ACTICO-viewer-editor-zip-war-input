@@ -1,0 +1,122 @@
+/* Container & Allgemeines */
+.viewer-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding: 20px;
+  background-color: #f4f6f9;
+  min-height: 100vh;
+}
+
+.upload-bar {
+  background: white;
+  padding: 12px 20px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  margin-bottom: 25px;
+}
+
+.diagram-canvas {
+  display: flex;
+  align-items: flex-start;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+/* Baumstruktur & Verbindungs-Verzweigungen */
+.node-row {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.children-group {
+  display: flex;
+  flex-direction: column;
+  margin-left: 35px;
+  position: relative;
+  border-left: 2px solid #a0a0a0;
+  padding-left: 15px;
+}
+
+.children-group::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  width: 15px;
+  height: 2px;
+  background-color: #a0a0a0;
+}
+
+/* Bedingungs-Label auf den Pfaden (z.B. Yes, No, > 10%) */
+.condition-badge {
+  background-color: #ffffff;
+  border: 1px solid #7f8c8d;
+  font-weight: bold;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin-right: 10px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Knoten-Karten Styling nach Actico-Vorbild */
+.rule-card {
+  border-radius: 3px;
+  padding: 8px 12px;
+  min-width: 220px;
+  font-size: 12px;
+  box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+  border: 1px solid #95a5a6;
+}
+
+.card-header {
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #2c3e50;
+}
+
+.card-expr {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 3px 6px;
+  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.08);
+  white-space: pre-wrap;
+}
+
+/* Typen & Farben exakt wie im Bild */
+.rule-card.start {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  border-color: #27ae60;
+}
+.rule-card.start .card-header { color: white; }
+
+.rule-card.assign {
+  background-color: #e8f0fe;
+  border: 1px solid #3b82f6;
+  border-left: 6px solid #1d4ed8;
+}
+
+.rule-card.decide {
+  background-color: #fef9c3;
+  border: 1px solid #eab308;
+  border-left: 6px solid #ca8a04;
+}
+
+.rule-card.scorecard {
+  background-color: #f0fdf4;
+  border: 1px solid #22c55e;
+  border-left: 6px solid #15803d;
+}
+
+.rule-card.action {
+  background-color: #eff6ff;
+  border: 1px solid #60a5fa;
+}
